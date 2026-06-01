@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(cmd /c \"dir /a C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\\")",
+      "PowerShell(cmd /c \"dir /a C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\.next\\\\\" 2>&1 | Select-Object -First 20)",
+      "PowerShell(cmd /c \"type C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\.package-lock.json\" 2>&1 | Select-Object -First 10)",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\next\\\\\" 2>&1 | Select-Object -First 5; cmd /c \"type C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\next\\\\package.json\" 2>&1 | Select-Object -First 10)",
+      "PowerShell(cmd /c \"type C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\react\\\\package.json\" 2>&1 | Select-Object -First 5; cmd /c \"dir C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\tailwindcss\\\\\" 2>&1 | Select-Object -First 3)",
+      "PowerShell(cmd /c \"type C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\react\\\\package.json\" 2>&1 | findstr version | Select-Object -First 2)",
+      "PowerShell(cmd /c \"type C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\tailwindcss\\\\package.json\" 2>&1 | findstr version | Select-Object -First 2)",
+      "PowerShell(cmd /c \"dir C:\\\\Users\\\\User1\\\\Exam-Prep-app\\\\node_modules\\\\prettier\\\\\" 2>&1 | Select-Object -First 3)",
+      "PowerShell(findstr *)",
+      "PowerShell(cmd /c \"dir /a/b C:\\\\Users\\\\User1\\\\exam-prep-app\\\\.next\\\\types\\\\\" 2>&1 | Select-Object -First 5)",
+      "PowerShell(Start-Process -FilePath $edgePath -ArgumentList \"--headless=new\", \"--screenshot=C:\\\\Users\\\\User1\\\\exam-prep-app\\\\screenshot_diagram.png\", \"--window-size=1440,900\", \"--no-sandbox\", \"--disable-gpu\", \"--virtual-time-budget=3000\", \"http://localhost:3000\" -Wait -NoNewWindow)",
+      "PowerShell($edgePath = \"C:\\\\Program Files \\(x86\\)\\\\Microsoft\\\\Edge\\\\Application\\\\msedge.exe\")",
+      "PowerShell(gh auth *)",
+      "PowerShell(git config *)",
+      "PowerShell(git credential *)",
+      "PowerShell(ssh -T git@github.com 2>&1 | Select-Object -First 322)",
+      "PowerShell(git ls-remote *)",
+      "PowerShell(winget install *)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status 2>&1)"
+    ]
+  }
+}
