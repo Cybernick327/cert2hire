@@ -11,6 +11,7 @@ import {
 interface NetworkDiagramProps {
   onOpenWorkstation: (id: "ws1" | "ws2") => void;
   onOpenRouter: () => void;
+  feedback?: { ws1?: boolean; router?: boolean };
 }
 
 /* ─── Fixed diagram canvas ─────────────────────────────────────── */
@@ -119,9 +120,11 @@ interface DeviceCardProps {
   icon: React.ReactNode;
   onClick?: () => void;
   clickable?: boolean;
+  feedback?: boolean;
 }
 
-function DeviceCard({ cx, cy, label, sublabel, icon, onClick, clickable }: DeviceCardProps) {
+function DeviceCard({ cx, cy, label, sublabel, icon, onClick, clickable, feedback }: DeviceCardProps) {
+  const hasFeedback = feedback !== undefined;
   return (
     <div
       onClick={onClick}
@@ -134,14 +137,18 @@ function DeviceCard({ cx, cy, label, sublabel, icon, onClick, clickable }: Devic
         height: CARD_H,
         backgroundColor: "white",
         borderRadius: "10px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)",
+        boxShadow: hasFeedback
+          ? (feedback ? "0 0 0 2.5px #16A34A" : "0 0 0 2.5px #DC2626")
+          : "0 2px 8px rgba(0,0,0,0.14), 0 0 0 1px rgba(0,0,0,0.06)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         padding: "8px 4px 6px",
         cursor: clickable ? "pointer" : "default",
-        border: clickable ? "1.5px solid transparent" : "1.5px solid transparent",
+        border: hasFeedback
+          ? `2px solid ${feedback ? "#16A34A" : "#DC2626"}`
+          : (clickable ? "1.5px solid transparent" : "1.5px solid transparent"),
         transition: "border-color 0.15s, box-shadow 0.15s, transform 0.12s",
         userSelect: "none",
         zIndex: 2,
@@ -187,7 +194,7 @@ function DeviceCard({ cx, cy, label, sublabel, icon, onClick, clickable }: Devic
           {sublabel}
         </div>
       )}
-      {clickable && (
+      {clickable && !hasFeedback && (
         <div
           style={{
             marginTop: "4px",
@@ -199,6 +206,35 @@ function DeviceCard({ cx, cy, label, sublabel, icon, onClick, clickable }: Devic
           }}
         >
           Click to Open
+        </div>
+      )}
+      {hasFeedback && (
+        <div
+          style={{
+            position: "absolute",
+            top: -10,
+            right: -10,
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            backgroundColor: feedback ? "#16A34A" : "#DC2626",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.25)",
+            zIndex: 3,
+          }}
+        >
+          {feedback ? (
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+              <polyline points="20,6 9,17 4,12" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="white" strokeWidth="3" strokeLinecap="round" />
+              <line x1="6" y1="6" x2="18" y2="18" stroke="white" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+          )}
         </div>
       )}
     </div>
@@ -244,9 +280,10 @@ function IfLabel({
 export default function NetworkDiagram({
   onOpenWorkstation,
   onOpenRouter,
+  feedback,
 }: NetworkDiagramProps) {
   return (
-    <div style={{ position: "relative", width: W, height: H }}>
+    <div style={{ position: "relative", width: W, height: H, isolation: "isolate" }}>
       {/* ── SVG underlay: zones, connections, DMZ box ── */}
       <svg
         width={W}
@@ -342,6 +379,7 @@ export default function NetworkDiagram({
         icon={<WorkstationSVG size={48} />}
         onClick={() => onOpenWorkstation("ws1")}
         clickable
+        feedback={feedback?.ws1}
       />
       <DeviceCard
         cx={DEV.ws2.x}
@@ -362,6 +400,7 @@ export default function NetworkDiagram({
         icon={<RouterSVG size={48} />}
         onClick={onOpenRouter}
         clickable
+        feedback={feedback?.router}
       />
 
       {/* DMZ devices */}

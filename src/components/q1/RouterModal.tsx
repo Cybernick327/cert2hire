@@ -10,6 +10,7 @@ interface RouterModalProps {
   onUpdateRule: (id: number, field: keyof AclRule, value: string) => void;
   onDeleteRule: (id: number) => void;
   onAddRule: () => void;
+  t5Feedback?: boolean;
 }
 
 const INTERFACES_TEXT = `eth1
@@ -43,6 +44,7 @@ export default function RouterModal({
   onUpdateRule,
   onDeleteRule,
   onAddRule,
+  t5Feedback,
 }: RouterModalProps) {
   const [activeTab, setActiveTab] = useState<"interfaces" | "acl">(
     "interfaces",
@@ -170,6 +172,7 @@ export default function RouterModal({
               onUpdate={onUpdateRule}
               onDelete={onDeleteRule}
               onAdd={onAddRule}
+              t5Feedback={t5Feedback}
             />
           )}
         </div>
@@ -210,9 +213,10 @@ interface ACLTabProps {
   onUpdate: (id: number, field: keyof AclRule, value: string) => void;
   onDelete: (id: number) => void;
   onAdd: () => void;
+  t5Feedback?: boolean;
 }
 
-function ACLTab({ rules, onUpdate, onDelete, onAdd }: ACLTabProps) {
+function ACLTab({ rules, onUpdate, onDelete, onAdd, t5Feedback }: ACLTabProps) {
   const cols = [
     { key: "source", label: "Source", width: "17%" },
     { key: "destination", label: "Destination", width: "17%" },
@@ -252,22 +256,42 @@ function ACLTab({ rules, onUpdate, onDelete, onAdd }: ACLTabProps) {
         {rules.map((rule, idx) => {
           const isEven = idx % 2 === 0;
           const isImplicit = rule.isImplicitDeny;
+          const isRule2 = rule.id === 2;
+          const showRule2Feedback = isRule2 && t5Feedback !== undefined;
           return (
             <div
               key={rule.id}
               style={{
                 display: "grid",
                 gridTemplateColumns: "44px 17% 17% 11% 12% 11% 40px",
-                backgroundColor: isImplicit
-                  ? "#FFF8F0"
-                  : isEven
-                    ? "#FFFFFF"
-                    : "#F8FAFC",
-                borderBottom: "1px solid #E5E7EB",
+                backgroundColor: showRule2Feedback
+                  ? (t5Feedback ? "#F0FDF4" : "#FEF2F2")
+                  : isImplicit
+                    ? "#FFF8F0"
+                    : isEven
+                      ? "#FFFFFF"
+                      : "#F8FAFC",
+                borderBottom: showRule2Feedback
+                  ? `2px solid ${t5Feedback ? "#16A34A" : "#DC2626"}`
+                  : "1px solid #E5E7EB",
+                outline: showRule2Feedback
+                  ? `2px solid ${t5Feedback ? "#16A34A" : "#DC2626"}`
+                  : "none",
+                outlineOffset: "-2px",
                 alignItems: "center",
                 minHeight: "36px",
+                position: "relative",
               }}
             >
+              {showRule2Feedback && (
+                <div style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}>
+                  {t5Feedback ? (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#16A34A" /><polyline points="8,12 11,15 16,9" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626" /><line x1="8" y1="8" x2="16" y2="16" stroke="white" strokeWidth="2.8" strokeLinecap="round" /><line x1="16" y1="8" x2="8" y2="16" stroke="white" strokeWidth="2.8" strokeLinecap="round" /></svg>
+                  )}
+                </div>
+              )}
               {/* Rule number */}
               <div
                 style={{

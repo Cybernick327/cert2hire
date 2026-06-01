@@ -19,7 +19,12 @@
       "PowerShell(ssh -T git@github.com 2>&1 | Select-Object -First 322)",
       "PowerShell(git ls-remote *)",
       "PowerShell(winget install *)",
-      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status 2>&1)"
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" auth status 2>&1)",
+      "PowerShell(node \"C:\\\\Users\\\\User1\\\\exam-prep-app\\\\cdp_check.mjs\" 2>&1)",
+      "PowerShell(node \"C:\\\\Users\\\\User1\\\\exam-prep-app\\\\cdp_click_test.mjs\" 2>&1)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(git add *)"
     ]
   }
 }

@@ -1,476 +1,336 @@
 "use client";
 
-import { useState } from "react";
-import LeftPanel from "@/components/q1/LeftPanel";
-import NetworkDiagram from "@/components/q1/NetworkDiagram";
-import RouterModal from "@/components/q1/RouterModal";
-import WorkstationModal from "@/components/q1/WorkstationModal";
-import ResultsPanel from "@/components/q1/ResultsPanel";
-import { INITIAL_ACL_RULES } from "@/components/q1/types";
-import type { AclRule, TerminalEntry, WorkstationId } from "@/components/q1/types";
+import Link from "next/link";
 
-export default function Question1() {
-  /* ── Panel & modal visibility ── */
-  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
-  const [workstationModal, setWorkstationModal] = useState<WorkstationId | null>(null);
-  const [routerOpen, setRouterOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+const QUESTIONS = [
+  {
+    num: 1,
+    href: "/question1",
+    title: "Network Diagram — ACL Configuration",
+    domain: "Network Security",
+    description: "Diagnose a connectivity fault by running workstation diagnostics and correcting a misconfigured ACL rule on the perimeter router.",
+    color: "#0066CC",
+    lightColor: "#EFF6FF",
+    borderColor: "#BFDBFE",
+  },
+  {
+    num: 2,
+    href: "/question2",
+    title: "SIEM Log Investigation",
+    domain: "Security Operations",
+    description: "Investigate a brute force attack in the SIEM dashboard, identify the attacking source IP, and submit a formal incident report.",
+    color: "#7C3AED",
+    lightColor: "#F5F3FF",
+    borderColor: "#DDD6FE",
+  },
+  {
+    num: 3,
+    href: "/question3",
+    title: "Vulnerability Scan Analysis",
+    domain: "Vulnerability Management",
+    description: "Review a vulnerability scan report, identify the highest-priority CVE, select the correct remediation, and prioritize affected hosts.",
+    color: "#DC2626",
+    lightColor: "#FEF2F2",
+    borderColor: "#FECACA",
+  },
+  {
+    num: 4,
+    href: "/question4",
+    title: "IAM Access Control Audit",
+    domain: "Identity & Access Management",
+    description: "Audit user permissions against the principle of least privilege — revoke excess access and grant missing required permissions.",
+    color: "#0891B2",
+    lightColor: "#ECFEFF",
+    borderColor: "#A5F3FC",
+  },
+  {
+    num: 5,
+    href: "/question5",
+    title: "Password Security & Credential Breach",
+    domain: "Cryptography",
+    description: "Analyze a compromised credential database, identify insecure hashing algorithms, and recommend a secure password policy.",
+    color: "#16A34A",
+    lightColor: "#F0FDF4",
+    borderColor: "#BBF7D0",
+  },
+  {
+    num: 6,
+    href: "/question6",
+    title: "Stakeholder Persona Security Controls",
+    domain: "Security Controls Framework",
+    description: "Match three executive security concerns to the correct control category, control type, and specific remediation measure.",
+    color: "#D97706",
+    lightColor: "#FFFBEB",
+    borderColor: "#FDE68A",
+  },
+  {
+    num: 7,
+    href: "/question7",
+    title: "Cyber Kill Chain Mapping",
+    domain: "Threat Intelligence",
+    description: "Map seven documented attacker actions from a real APT intrusion to the correct phase of the Lockheed Martin Cyber Kill Chain.",
+    color: "#0891B2",
+    lightColor: "#ECFEFF",
+    borderColor: "#A5F3FC",
+  },
+  {
+    num: 8,
+    href: "/question8",
+    title: "Secure Protocol Replacement",
+    domain: "Network Security",
+    description: "Identify and replace five insecure plaintext protocols with their correct encrypted alternatives on a corporate network diagram.",
+    color: "#16A34A",
+    lightColor: "#F0FDF4",
+    borderColor: "#BBF7D0",
+  },
+];
 
-  /* ── ACL rules (student-editable) ── */
-  const [aclRules, setAclRules] = useState<AclRule[]>(INITIAL_ACL_RULES);
-
-  /* ── Terminal history per workstation ── */
-  const [ws1History, setWs1History] = useState<TerminalEntry[]>([]);
-  const [ws2History, setWs2History] = useState<TerminalEntry[]>([]);
-
-  /* ── Scoring trackers (T1–T4; T5 is computed) ── */
-  const [t1_ranIpconfig, setT1] = useState(false);
-  const [t2_ranPingExternal, setT2] = useState(false);
-  const [t3_openedWS1, setT3] = useState(false);
-  const [t4_openedRouterACL, setT4] = useState(false);
-
-  /* T5: rule 2 changed to Accept or deleted entirely */
-  const rule2 = aclRules.find((r) => r.id === 2);
-  const t5_fixedRule2 = !rule2 || rule2.access === "Accept";
-
-  /* ── ACL handlers ── */
-  function handleUpdateRule(id: number, field: keyof AclRule, value: string) {
-    setAclRules((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)),
-    );
-  }
-
-  function handleDeleteRule(id: number) {
-    setAclRules((prev) => prev.filter((r) => r.id !== id));
-  }
-
-  function handleAddRule() {
-    const maxId = Math.max(...aclRules.map((r) => r.id));
-    const newRule: AclRule = {
-      id: maxId + 1,
-      source: "ANY",
-      destination: "ANY",
-      protocol: "ANY",
-      port: "ANY",
-      access: "Deny",
-      isImplicitDeny: false,
-    };
-    setAclRules((prev) => {
-      const lastIdx = prev.findIndex((r) => r.isImplicitDeny);
-      const copy = [...prev];
-      if (lastIdx >= 0) {
-        copy.splice(lastIdx, 0, newRule);
-      } else {
-        copy.push(newRule);
-      }
-      return copy;
-    });
-  }
-
-  /* ── Open workstation ── */
-  function handleOpenWorkstation(id: WorkstationId) {
-    setWorkstationModal(id);
-  }
-
-  /* ── Reset everything ── */
-  function handleReset() {
-    setAclRules(INITIAL_ACL_RULES);
-    setWs1History([]);
-    setWs2History([]);
-    setT1(false);
-    setT2(false);
-    setT3(false);
-    setT4(false);
-    setWorkstationModal(null);
-    setRouterOpen(false);
-    setSubmitted(false);
-  }
-
-  const scores = {
-    t1_ranIpconfig,
-    t2_ranPingExternal,
-    t3_openedWS1,
-    t4_openedRouterACL,
-    t5_fixedRule2,
-  };
-
+export default function HomePage() {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        overflow: "hidden",
-        backgroundColor: "white",
-      }}
-    >
-      {/* ════════════════════════════ PAGE HEADER ════════════════════════════ */}
+    <div style={{ minHeight: "100vh", backgroundColor: "#F8FAFC", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+
+      {/* ════ HEADER ════ */}
       <header
         style={{
-          backgroundColor: "white",
-          borderBottom: "1px solid #DDDDDD",
-          padding: "12px 20px",
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          flexShrink: 0,
-          gap: "16px",
-        }}
-      >
-        <div>
-          {/* Brand row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "8px",
-            }}
-          >
-            <div
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "6px",
-                backgroundColor: "#0A1628",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <span
-                style={{
-                  color: "#F5A623",
-                  fontWeight: 900,
-                  fontSize: "15px",
-                  lineHeight: 1,
-                }}
-              >
-                C
-              </span>
-            </div>
-            <span
-              style={{
-                fontWeight: 800,
-                fontSize: "14px",
-                color: "#0A1628",
-                letterSpacing: "0.01em",
-              }}
-            >
-              Cert2Hire
-            </span>
-            <span
-              style={{
-                fontSize: "10.5px",
-                color: "#94A3B8",
-                fontWeight: 500,
-              }}
-            >
-              Your Fastest Path to Certification
-            </span>
-          </div>
-
-          <h1
-            style={{
-              fontSize: "20px",
-              fontWeight: 800,
-              color: "#0A1628",
-              margin: "0 0 4px",
-              letterSpacing: "-0.025em",
-            }}
-          >
-            Welcome to the Cert2Hire Security+ Simulation
-          </h1>
-          <p style={{ fontSize: "12.5px", color: "#64748B", margin: 0 }}>
-            Read the question carefully, follow all instructions, then click
-            Submit.
-          </p>
-        </div>
-
-        {/* Submit */}
-        <button
-          onClick={() => setSubmitted(true)}
-          style={{
-            backgroundColor: "#0066CC",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            padding: "10px 26px",
-            fontSize: "13.5px",
-            fontWeight: 700,
-            cursor: "pointer",
-            whiteSpace: "nowrap",
-            flexShrink: 0,
-            boxShadow: "0 2px 8px rgba(0,102,204,0.3)",
-            letterSpacing: "0.02em",
-            marginTop: "4px",
-          }}
-        >
-          Submit
-        </button>
-      </header>
-
-      {/* ════════════════════════════ MAIN ROW ════════════════════════════ */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Left scenario panel */}
-        <LeftPanel
-          open={leftPanelOpen}
-          onClose={() => setLeftPanelOpen(false)}
-        />
-
-        {/* Workspace */}
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            minWidth: 0,
-          }}
-        >
-          {/* Toolbar */}
-          <div
-            style={{
-              padding: "7px 14px",
-              borderBottom: "1px solid #DDDDDD",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              backgroundColor: "#FAFAFA",
-              flexShrink: 0,
-            }}
-          >
-            <PillButton
-              icon={<DocIcon />}
-              onClick={() => setLeftPanelOpen((v) => !v)}
-            >
-              Show Question
-            </PillButton>
-            <PillButton icon={<ResetIcon />} onClick={handleReset}>
-              Reset All Answers
-            </PillButton>
-          </div>
-
-          {/* Diagram scroll area */}
-          <div
-            style={{
-              flex: 1,
-              overflow: "auto",
-              backgroundColor: "#E8EEF4",
-              padding: "24px",
-            }}
-          >
-            <NetworkDiagram
-              onOpenWorkstation={handleOpenWorkstation}
-              onOpenRouter={() => setRouterOpen(true)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ════════════════════════════ BOTTOM BAR ════════════════════════════ */}
-      <div
-        style={{
-          borderTop: "1px solid #DDDDDD",
-          padding: "9px 18px",
+          backgroundColor: "#0A1628",
+          padding: "0 40px",
+          height: "60px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          backgroundColor: "white",
-          flexShrink: 0,
         }}
       >
-        <button
-          onClick={() => setLeftPanelOpen((v) => !v)}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            style={{
+              width: "32px",
+              height: "32px",
+              borderRadius: "7px",
+              backgroundColor: "#F5A623",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <span style={{ color: "#0A1628", fontWeight: 900, fontSize: "17px", lineHeight: 1 }}>C</span>
+          </div>
+          <span style={{ fontWeight: 800, fontSize: "16px", color: "white", letterSpacing: "0.01em" }}>Cert2Hire</span>
+          <span
+            style={{
+              backgroundColor: "rgba(245,166,35,0.18)",
+              color: "#F5A623",
+              border: "1px solid rgba(245,166,35,0.35)",
+              borderRadius: "12px",
+              padding: "2px 10px",
+              fontSize: "11px",
+              fontWeight: 700,
+              letterSpacing: "0.05em",
+            }}
+          >
+            Security+ SY0-701
+          </span>
+        </div>
+        <span style={{ fontSize: "12px", color: "#64748B" }}>Your Fastest Path to Certification</span>
+      </header>
+
+      {/* ════ HERO ════ */}
+      <div
+        style={{
+          backgroundColor: "#0A1628",
+          padding: "48px 40px 52px",
+          textAlign: "center",
+          borderBottom: "1px solid #1E3A5F",
+        }}
+      >
+        <h1
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            backgroundColor: "#F5F7FA",
-            border: "1px solid #DDDDDD",
-            borderRadius: "5px",
-            padding: "6px 14px",
-            fontSize: "12.5px",
-            fontWeight: 600,
-            color: "#374151",
-            cursor: "pointer",
+            fontSize: "34px",
+            fontWeight: 900,
+            color: "white",
+            margin: "0 0 14px",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.15,
           }}
         >
-          <DocIcon />
-          Scenario
-        </button>
-
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={handleReset}
-            style={{
-              backgroundColor: "white",
-              border: "1px solid #DDDDDD",
-              borderRadius: "5px",
-              padding: "6px 14px",
-              fontSize: "12.5px",
-              fontWeight: 600,
-              color: "#374151",
-              cursor: "pointer",
-            }}
-          >
-            Reset All Answers
-          </button>
-          <button
-            onClick={() => setSubmitted(true)}
-            style={{
-              backgroundColor: "#0A1628",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              padding: "6px 22px",
-              fontSize: "12.5px",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Finish
-          </button>
+          Security+ Simulation Lab
+        </h1>
+        <p
+          style={{
+            fontSize: "15px",
+            color: "#94A3B8",
+            margin: "0 auto 28px",
+            maxWidth: "600px",
+            lineHeight: 1.7,
+          }}
+        >
+          Eight performance-based question simulations covering the core domains of CompTIA Security+.
+          Each delivers realistic scenarios, interactive tools, and immediate scored feedback.
+        </p>
+        <div style={{ display: "flex", justifyContent: "center", gap: "24px", flexWrap: "wrap" }}>
+          {[
+            { n: "8", label: "Question Simulations" },
+            { n: "40", label: "Scored Tasks" },
+            { n: "7", label: "Security Domains" },
+          ].map((s) => (
+            <div key={s.label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "28px", fontWeight: 900, color: "#F5A623", lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontSize: "11.5px", color: "#64748B", marginTop: "3px", fontWeight: 500 }}>{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* ════════════════════════════ MODALS ════════════════════════════ */}
-
-      {workstationModal && (
-        <WorkstationModal
-          workstation={workstationModal}
-          history={workstationModal === "ws1" ? ws1History : ws2History}
-          onClose={() => setWorkstationModal(null)}
-          onAddEntry={(entry) => {
-            if (workstationModal === "ws1") {
-              setWs1History((p) => [...p, entry]);
-            } else {
-              setWs2History((p) => [...p, entry]);
-            }
+      {/* ════ CARDS GRID ════ */}
+      <main style={{ maxWidth: "1100px", margin: "0 auto", padding: "40px 24px 60px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: "20px",
           }}
-          onIpconfig={() => {
-              setT1(true);
-              if (workstationModal === "ws1") setT3(true);
-            }}
-          onPingKnownExternal={() => setT2(true)}
-        />
-      )}
+        >
+          {QUESTIONS.map((q) => (
+            <div
+              key={q.num}
+              style={{
+                backgroundColor: "white",
+                border: "1px solid #E2E8F0",
+                borderRadius: "12px",
+                overflow: "hidden",
+                boxShadow: "0 1px 6px rgba(0,0,0,0.06)",
+                display: "flex",
+                flexDirection: "column",
+                transition: "box-shadow 0.15s, transform 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.12)";
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 6px rgba(0,0,0,0.06)";
+                (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+              }}
+            >
+              {/* Colored top accent bar */}
+              <div style={{ height: "5px", backgroundColor: q.color }} />
 
-      {routerOpen && (
-        <RouterModal
-          aclRules={aclRules}
-          onClose={() => setRouterOpen(false)}
-          onOpenACL={() => setT4(true)}
-          onUpdateRule={handleUpdateRule}
-          onDeleteRule={handleDeleteRule}
-          onAddRule={handleAddRule}
-        />
-      )}
+              {/* Card body */}
+              <div style={{ padding: "20px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
+                {/* Q# + domain row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <div
+                    style={{
+                      width: "42px",
+                      height: "42px",
+                      borderRadius: "10px",
+                      backgroundColor: q.lightColor,
+                      border: `1px solid ${q.borderColor}`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <span style={{ fontSize: "15px", fontWeight: 900, color: q.color }}>Q{q.num}</span>
+                  </div>
+                  <span
+                    style={{
+                      backgroundColor: q.lightColor,
+                      color: q.color,
+                      border: `1px solid ${q.borderColor}`,
+                      borderRadius: "20px",
+                      padding: "3px 10px",
+                      fontSize: "10.5px",
+                      fontWeight: 700,
+                      letterSpacing: "0.03em",
+                    }}
+                  >
+                    {q.domain}
+                  </span>
+                </div>
 
-      {submitted && (
-        <ResultsPanel
-          scores={scores}
-          onExit={() => {
-            setSubmitted(false);
-            handleReset();
-          }}
-        />
-      )}
+                {/* Title */}
+                <h2
+                  style={{
+                    fontSize: "15.5px",
+                    fontWeight: 800,
+                    color: "#0A1628",
+                    margin: "0 0 8px",
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {q.title}
+                </h2>
+
+                {/* Description */}
+                <p
+                  style={{
+                    fontSize: "12.5px",
+                    color: "#64748B",
+                    lineHeight: 1.65,
+                    margin: "0 0 18px",
+                    flex: 1,
+                  }}
+                >
+                  {q.description}
+                </p>
+
+                {/* Footer row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span
+                    style={{
+                      backgroundColor: "#F8FAFC",
+                      color: "#64748B",
+                      border: "1px solid #E2E8F0",
+                      borderRadius: "12px",
+                      padding: "3px 9px",
+                      fontSize: "10.5px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    5 Tasks
+                  </span>
+                  <Link
+                    href={q.href}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      backgroundColor: q.color,
+                      color: "white",
+                      borderRadius: "7px",
+                      padding: "8px 18px",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    Start
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                      <polyline points="9,18 15,12 9,6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      {/* ════ FOOTER ════ */}
+      <footer
+        style={{
+          borderTop: "1px solid #E2E8F0",
+          padding: "20px 40px",
+          textAlign: "center",
+          backgroundColor: "white",
+        }}
+      >
+        <p style={{ fontSize: "12px", color: "#94A3B8", margin: 0 }}>
+          © Cert2Hire. All Rights Reserved. &nbsp;·&nbsp; CompTIA Security+ SY0-701 Simulation Lab
+        </p>
+      </footer>
     </div>
-  );
-}
-
-/* ─── Small shared UI pieces ─── */
-
-function PillButton({
-  icon,
-  onClick,
-  children,
-}: {
-  icon: React.ReactNode;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        backgroundColor: "white",
-        border: "1px solid #DDDDDD",
-        borderRadius: "20px",
-        padding: "5px 13px",
-        fontSize: "12px",
-        fontWeight: 600,
-        color: "#374151",
-        cursor: "pointer",
-      }}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
-
-function DocIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <polyline
-        points="14,2 14,8 20,8"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <line
-        x1="16"
-        y1="13"
-        x2="8"
-        y2="13"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-      <line
-        x1="16"
-        y1="17"
-        x2="8"
-        y2="17"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ResetIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-      <polyline
-        points="1,4 1,10 7,10"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M3.51 15a9 9 0 1 0 .49-5.05"
-        stroke="#374151"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }
