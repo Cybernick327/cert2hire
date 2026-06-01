@@ -48,9 +48,14 @@ export default function RouterModal({
     "interfaces",
   );
 
+  const [aclTabEverOpened, setAclTabEverOpened] = useState(false);
+
   function handleTabClick(tab: "interfaces" | "acl") {
     setActiveTab(tab);
-    if (tab === "acl") onOpenACL();
+    if (tab === "acl" && !aclTabEverOpened) {
+      setAclTabEverOpened(true);
+      onOpenACL();
+    }
   }
 
   return (

@@ -349,9 +349,9 @@ export default function Question1() {
               setWs2History((p) => [...p, entry]);
             }
           }}
-          onIpconfig={(ws) => {
+          onIpconfig={() => {
               setT1(true);
-              if (ws === "ws1") setT3(true);
+              if (workstationModal === "ws1") setT3(true);
             }}
           onPingKnownExternal={() => setT2(true)}
         />

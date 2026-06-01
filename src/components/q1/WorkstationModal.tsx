@@ -8,7 +8,7 @@ interface WorkstationModalProps {
   history: TerminalEntry[];
   onClose: () => void;
   onAddEntry: (entry: TerminalEntry) => void;
-  onIpconfig: (ws: WorkstationId) => void;
+  onIpconfig: () => void;
   onPingKnownExternal: () => void;
 }
 
@@ -304,12 +304,12 @@ export default function WorkstationModal({
     const output = processCommand(input, workstation, cfg);
 
     if (lower === "ipconfig" || lower === "ipconfig /all") {
-      onIpconfig(workstation);
+      onIpconfig();
     }
     if (lower.startsWith("ping ") || lower.startsWith("tracert ")) {
       const target = lower.startsWith("ping ")
-        ? input.trim().slice(5).trim()
-        : input.trim().slice(8).trim();
+        ? lower.slice(5).trim()
+        : lower.slice(8).trim();
       if (isKnownExternalTarget(target)) onPingKnownExternal();
     }
 
