@@ -18,43 +18,43 @@ interface ResultsPanelProps {
 const TASKS = [
   {
     key: "t1_ranIpconfig" as keyof Scores,
-    label: "Task 1 — Ran a network diagnostic command on a workstation",
+    label: "Task 1 — Ran ipconfig or ipconfig /all in a workstation terminal",
     correctExplanation:
-      "You ran ipconfig to enumerate the workstation's IP configuration. This is the correct first diagnostic step — confirming the IP address and default gateway allows you to map the workstation to its subnet and verify which ACL rules would apply to its traffic.",
+      "You ran ipconfig (or ipconfig /all) on a workstation, confirming its IP address, subnet mask, and default gateway. This is the required first diagnostic step — knowing the IP address maps the workstation to its ACL-matched subnet and tells you exactly which rules on the router apply to its traffic.",
     incorrectExplanation:
-      "You did not run ipconfig (or ipconfig /all) on either workstation. In a real troubleshooting scenario, confirming IP addressing is the mandatory first step. Without knowing the workstation's subnet, you cannot correctly interpret which ACL rules are relevant.",
+      "You did not run ipconfig or ipconfig /all on either workstation terminal. This command is the required first diagnostic step. Without confirming IP addressing, you cannot map the workstation to its subnet or correctly determine which ACL rules govern its traffic. No other command satisfies this task.",
   },
   {
     key: "t2_ranPingExternal" as keyof Scores,
-    label: "Task 2 — Tested external reachability using ping or tracert",
+    label: "Task 2 — Tested reachability of a known external address using ping or tracert",
     correctExplanation:
-      "You used ping or tracert to an external address to confirm that outbound connectivity is failing from the affected workstation. This test identifies exactly where in the network path the failure occurs — a timeout at the router hop immediately points to an ACL or routing issue rather than a DNS or application-layer problem.",
+      "You used ping or tracert to test reachability of a known external address (203.0.113.1 or certificationbody.org). These are the only external addresses identified within this simulation — the router's eth3 interface at 203.0.113.1 and the site Mr. Chen reported he cannot access. Running this test confirms that the failure is outbound from the workstation, pointing squarely at an ACL or routing rule.",
     incorrectExplanation:
-      "You did not run a ping or tracert to an external address. Reachability testing is a critical step in isolating whether the issue is local (NIC, IP stack), on-path (ACL, routing), or remote (destination). Without this test, you are guessing at the root cause.",
+      "You did not run ping or tracert against either of the external addresses available in this simulation: 203.0.113.1 (the router's external interface, visible in the Interfaces tab) or certificationbody.org (the site reported as unreachable in the scenario). Only these two addresses count for this task because they are the only external addresses a student can discover from information provided within the simulation.",
   },
   {
     key: "t3_openedWS1" as keyof Scores,
-    label: "Task 3 — Identified Workstation 1 as the affected workstation",
+    label: "Task 3 — Confirmed Workstation 1 (192.168.0.65) as Mr. Chen's affected machine",
     correctExplanation:
-      "You opened and investigated Workstation 1 (EXEC-PC-CHEN, 192.168.0.65). This is the correct workstation to focus on — it is the machine assigned to Mr. David Chen, whose connectivity issue was reported. Identifying the specific affected host is essential before examining any upstream device.",
+      "You opened Workstation 1's terminal and ran ipconfig, confirming the IP address 192.168.0.65 — the machine assigned to Mr. David Chen. Positively identifying the affected host by its IP address is essential before any upstream investigation. Running ipconfig on Workstation 1 specifically is the only action that satisfies this task.",
     incorrectExplanation:
-      "You did not open Workstation 1's terminal during your investigation. Workstation 1 belongs to Mr. Chen (192.168.0.65) and is the source of the reported issue. Focusing investigation on the correct endpoint first is a fundamental troubleshooting discipline.",
+      "You did not open Workstation 1's terminal and run ipconfig to confirm IP 192.168.0.65. The scenario identifies Mr. David Chen as the affected user. His workstation is Workstation 1 at 192.168.0.65. Opening only Workstation 2 does not satisfy this task. You must open Workstation 1 and run ipconfig to positively confirm the affected host identity.",
   },
   {
     key: "t4_openedRouterACL" as keyof Scores,
-    label: "Task 4 — Reviewed the router Access Control List",
+    label: "Task 4 — Opened the Access Control List tab on the router",
     correctExplanation:
-      "You navigated to the ACL tab on the perimeter router and reviewed the rule set. This is the correct action — the scenario explicitly states the IT Director suspects an ACL misconfiguration, and examining the rule table directly reveals the conflicting entry.",
+      "You clicked the Access Control List tab inside the Router modal, directly examining the rule set that governs all traffic through the perimeter router. The scenario states that IT Director Whitfield suspects an ACL misconfiguration from the recent DMZ implementation. Navigating to the ACL tab is the required step to identify the offending rule.",
     incorrectExplanation:
-      "You did not open the ACL tab on the router. The core of this exercise is reading and interpreting firewall ACL rules. Without reviewing the rule table, you cannot identify which rule is incorrectly blocking legitimate HTTPS traffic.",
+      "You did not open the Access Control List tab on the router. Opening the Router modal and viewing the Interfaces tab alone does not satisfy this task — the Interfaces tab shows interface addressing only. You must click the Access Control List tab to review the rule set, because the bug exists there, not in the interface configuration.",
   },
   {
     key: "t5_fixedRule2" as keyof Scores,
-    label: "Task 5 — Corrected the rule blocking HTTPS traffic from the executive subnet",
+    label: "Task 5 — Corrected Rule 2 (the rule blocking HTTPS from the executive subnet)",
     correctExplanation:
-      "You identified and corrected Rule 2: source 192.168.0.64/27 → destination ANY → TCP → port 443 → Deny. This rule incorrectly blocked all outbound HTTPS traffic originating from the executive floor subnet, including Mr. Chen's workstation. Changing the action to Accept (or removing the rule entirely) restores HTTPS connectivity while leaving all other security rules intact. Rule 9 already provides a general accept for the executive subnet, but the more specific Rule 2 was evaluated first and overrode it.",
+      "You identified and corrected Rule 2: source 192.168.0.64/27 → destination ANY → protocol TCP → port 443 → action Deny. This rule explicitly blocks all HTTPS (TCP 443) traffic from the executive floor subnet, which includes Mr. Chen's workstation at 192.168.0.65. You changed the action to Accept, or deleted the rule entirely. Either action is correct — Rule 9 already provides a catch-all Accept for the executive subnet, but Rule 2 was evaluated first and overrode it for TCP 443 specifically.",
     incorrectExplanation:
-      "You did not correct Rule 2 (TCP port 443 Deny from 192.168.0.64/27 to ANY). This is the root cause of the reported issue. Rule 2 is evaluated before Rule 9's catch-all Accept, meaning all HTTPS requests from the executive subnet are silently dropped. The correct fix is to change Rule 2's action to Accept, or to delete it entirely and rely on Rule 9.",
+      "You did not correct Rule 2 (source 192.168.0.64/27 → destination ANY → TCP → port 443 → Deny). This is the sole rule causing the reported issue. Modifying any other rule does not fix the problem. Rule 2 is matched before Rule 9's catch-all Accept because ACLs are evaluated top-down and the first match wins. The correct remediation is to change Rule 2's action to Accept, or to delete Rule 2 entirely.",
   },
 ];
 

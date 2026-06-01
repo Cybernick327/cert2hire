@@ -8,8 +8,8 @@ interface WorkstationModalProps {
   history: TerminalEntry[];
   onClose: () => void;
   onAddEntry: (entry: TerminalEntry) => void;
-  onIpconfig: () => void;
-  onPingExternal: () => void;
+  onIpconfig: (ws: WorkstationId) => void;
+  onPingKnownExternal: () => void;
 }
 
 const WS_CONFIG = {
@@ -39,13 +39,21 @@ const WS_CONFIG = {
 
 function isExternalAddress(addr: string): boolean {
   const a = addr.toLowerCase().trim();
-  if (a === "localhost") return false;
-  if (a.startsWith("192.168.")) return false;
-  if (a.startsWith("10.")) return false;
+  if (a === "localhost" || a === "") return false;
+  if (a.startsWith("192.168.") || a.startsWith("10.") || a.startsWith("127.")) return false;
   if (a.startsWith("172.16.") || a.startsWith("172.17.") || a.startsWith("172.18.") || a.startsWith("172.19.") || a.startsWith("172.2") || a.startsWith("172.3")) return false;
-  if (a.startsWith("127.")) return false;
-  if (a === "") return false;
   return true;
+}
+
+/* Only these two targets count for Task 2 — they are the only external
+   addresses a student can learn from the simulation itself. */
+const KNOWN_EXTERNAL_TARGETS = new Set([
+  "203.0.113.1",
+  "certificationbody.org",
+]);
+
+function isKnownExternalTarget(addr: string): boolean {
+  return KNOWN_EXTERNAL_TARGETS.has(addr.toLowerCase().trim());
 }
 
 function processCommand(
@@ -268,7 +276,7 @@ export default function WorkstationModal({
   onClose,
   onAddEntry,
   onIpconfig,
-  onPingExternal,
+  onPingKnownExternal,
 }: WorkstationModalProps) {
   const cfg = WS_CONFIG[workstation];
   const [input, setInput] = useState("");
@@ -296,13 +304,13 @@ export default function WorkstationModal({
     const output = processCommand(input, workstation, cfg);
 
     if (lower === "ipconfig" || lower === "ipconfig /all") {
-      onIpconfig();
+      onIpconfig(workstation);
     }
     if (lower.startsWith("ping ") || lower.startsWith("tracert ")) {
       const target = lower.startsWith("ping ")
         ? input.trim().slice(5).trim()
         : input.trim().slice(8).trim();
-      if (isExternalAddress(target)) onPingExternal();
+      if (isKnownExternalTarget(target)) onPingKnownExternal();
     }
 
     if (output === "__CLEAR__") {

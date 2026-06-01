@@ -70,7 +70,6 @@ export default function Question1() {
   /* ── Open workstation ── */
   function handleOpenWorkstation(id: WorkstationId) {
     setWorkstationModal(id);
-    if (id === "ws1") setT3(true);
   }
 
   /* ── Reset everything ── */
@@ -350,8 +349,11 @@ export default function Question1() {
               setWs2History((p) => [...p, entry]);
             }
           }}
-          onIpconfig={() => setT1(true)}
-          onPingExternal={() => setT2(true)}
+          onIpconfig={(ws) => {
+              setT1(true);
+              if (ws === "ws1") setT3(true);
+            }}
+          onPingKnownExternal={() => setT2(true)}
         />
       )}
 
