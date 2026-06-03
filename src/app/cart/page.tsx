@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { PRODUCTS, ProductId } from "@/lib/stripe";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const CATALOG = [
   { key: "video" as ProductId, highlight: false },
@@ -15,7 +14,6 @@ const CATALOG = [
 ];
 
 export default function CartPage() {
-  const router = useRouter();
   const [cart, setCart] = useState<ProductId[]>([]);
   const [loading, setLoading] = useState(false);
 
